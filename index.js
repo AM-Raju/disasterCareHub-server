@@ -28,7 +28,7 @@ async function run() {
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
-      const { name, email, password } = req.body;
+      const { name, email, password, role } = req.body;
 
       // Check if email already exists
       const existingUser = await usersCollection.findOne({ email });
@@ -43,7 +43,7 @@ async function run() {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert user into the database
-      await usersCollection.insertOne({ name, email, password: hashedPassword });
+      await usersCollection.insertOne({ name, email, password: hashedPassword, role });
 
       res.status(201).json({
         success: true,
@@ -82,6 +82,33 @@ async function run() {
     // ==============================================================
     // WRITE YOUR CODE HERE
 
+    // ========================
+    // Users Api
+    // ========================
+
+    //get all users
+
+    app.get("/api/v1/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    // get user by email
+
+    app.get("/api/v1/users/:email", async (req, res) => {
+      const userEmail = req?.params?.email;
+      let result;
+      if (userEmail) {
+        const query = { email: userEmail };
+        result = await usersCollection.findOne(query);
+      }
+      res.send(result);
+    });
+
+    // ========================
+    // Supply Api
+    // ========================
+
     // Create supply
     app.post("/create-supply", async (req, res) => {
       const supply = req.body;
@@ -104,11 +131,35 @@ async function run() {
     });
 
     // Get supply by id
-    app.get("/supplies/:id", async (req, res) => {
+    app.get("/supply/:id", async (req, res) => {
       const id = req.params.id;
-      const supplyId = new ObjectId(id);
-      const query = { _id: supplyId };
-      const result = await supplyCollection.findOne(query);
+      let result;
+      if (id) {
+        const supplyId = new ObjectId(id);
+        const query = { _id: supplyId };
+        result = await supplyCollection.findOne(query);
+      }
+      res.send(result);
+    });
+
+    // Update supply post
+    app.patch("/supply/:id", async (req, res) => {
+      const id = req.params.id;
+      const newPost = req.body;
+
+      console.log({ id, newPost });
+      let result;
+      if (id) {
+        const supplyId = new ObjectId(id);
+        const filter = { _id: supplyId };
+        const document = {
+          $push: { post: newPost },
+        };
+        const options = {
+          upsert: true,
+        };
+        result = await supplyCollection.updateOne(filter, document, options);
+      }
       res.send(result);
     });
 
