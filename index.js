@@ -147,7 +147,6 @@ async function run() {
       const id = req.params.id;
       const newPost = req.body;
 
-      console.log({ id, newPost });
       let result;
       if (id) {
         const supplyId = new ObjectId(id);
@@ -160,6 +159,62 @@ async function run() {
         };
         result = await supplyCollection.updateOne(filter, document, options);
       }
+      res.send(result);
+    });
+
+    // LeaderBoard sorting
+
+    app.get("/leaderboard", async (req, res) => {
+      const result = await usersCollection
+        .aggregate([
+          // stage 1
+          {
+            $match: { role: "donor" },
+          },
+          // Stage 2
+          {
+            $lookup: {
+              from: "supplies",
+              localField: "email",
+              foreignField: "donatedBy",
+              as: "supplies",
+            },
+          },
+          // Stage 3
+          {
+            $unwind: "$supplies",
+          },
+          // Stage 4
+          {
+            $group: {
+              _id: "$_id",
+              name: { $first: "$name" },
+              email: { $first: "$email" },
+              password: { $first: "$password" },
+              role: { $first: "$role" },
+              image: { $first: "$image" },
+              totalDonation: { $sum: "$supplies.amount" },
+              supplies: { $push: "$supplies" },
+            },
+          },
+          // Stage 5
+          {
+            $sort: { totalDonation: -1 }, // Sort in descending order based on totalDonation
+          },
+          // Stage 6
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              designation: 1,
+              image: 1,
+              totalDonation: 1,
+            },
+          },
+        ])
+        .toArray();
+
+      // console.log(data);
       res.send(result);
     });
 
