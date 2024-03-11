@@ -14,7 +14,10 @@ app.use(express.json());
 
 // MongoDB Connection URL
 const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 async function run() {
   try {
@@ -25,6 +28,7 @@ async function run() {
     const db = client.db("disasterCareHub");
     const usersCollection = db.collection("users");
     const supplyCollection = db.collection("supplies");
+    const volunteerCollection = db.collection("volunteer");
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
@@ -43,7 +47,12 @@ async function run() {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert user into the database
-      await usersCollection.insertOne({ name, email, password: hashedPassword, role });
+      await usersCollection.insertOne({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+      });
 
       res.status(201).json({
         success: true,
@@ -108,12 +117,24 @@ async function run() {
     // ========================
     // Volunteer api
     // ========================
-   app.post('/create-volunteer', async(req, res)=> {
-    console.log(req.body);
-   })
-   
-   
-   
+    app.post("/create-volunteer", async (req, res) => {
+      const volunteer = req.body;
+
+      const { email } = req.body;
+
+      const existingVolunteer = await volunteerCollection.findOne({ email });
+      if (existingVolunteer) {
+        res.send({ message: "User already exist!" });
+      }
+
+      let result;
+      if (!existingVolunteer) {
+        result = await volunteerCollection.insertOne(volunteer);
+      }
+
+      res.send(result);
+    });
+
     // ========================
     // Supply Api
     // ========================
