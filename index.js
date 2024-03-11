@@ -135,6 +135,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/volunteers", async (req, res) => {
+      const result = await volunteerCollection.find().toArray();
+      res.send(result);
+    });
+
     // ========================
     // Supply Api
     // ========================
