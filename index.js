@@ -163,6 +163,32 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/testimonials", async (req, res) => {
+      const result = await testimonialCollection
+        .aggregate([
+          // Stage one
+
+          {
+            $lookup: {
+              from: "users",
+              localField: "testimonyBy",
+              foreignField: "email",
+              as: "donor",
+            },
+          },
+          // Stage 2
+          {
+            $project: {
+              testimonial: 1,
+              donor: { name: 1, company: 1, designation: 1, image: 1 },
+            },
+          },
+        ])
+        .toArray();
+
+      res.send(result);
+    });
+
     // ========================
     // Supply Api
     // ========================
