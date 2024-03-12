@@ -29,6 +29,7 @@ async function run() {
     const usersCollection = db.collection("users");
     const supplyCollection = db.collection("supplies");
     const volunteerCollection = db.collection("volunteer");
+    const testimonialCollection = db.collection("testimonial");
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
@@ -137,6 +138,28 @@ async function run() {
 
     app.get("/volunteers", async (req, res) => {
       const result = await volunteerCollection.find().toArray();
+      res.send(result);
+    });
+
+    // ========================
+    // Testimonial Api
+    // ========================
+    app.post("/create-testimonial", async (req, res) => {
+      const testimonial = req.body;
+      const { testimonyBy } = req.body;
+
+      const existingTestimony = await testimonialCollection.findOne({
+        testimonyBy,
+      });
+
+      if (existingTestimony) {
+        res.send({ message: "Testimonial already created!" });
+      }
+
+      let result;
+      if (!existingTestimony) {
+        result = await testimonialCollection.insertOne(testimonial);
+      }
       res.send(result);
     });
 
