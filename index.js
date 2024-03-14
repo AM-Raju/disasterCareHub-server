@@ -115,6 +115,20 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/api/v1/delete-user/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const userId = new ObjectId(id);
+      const query = { _id: userId };
+
+      let result;
+      if (id) {
+        result = await usersCollection.deleteOne(query);
+      }
+
+      res.send(result);
+    });
+
     // ========================
     // Volunteer api
     // ========================
